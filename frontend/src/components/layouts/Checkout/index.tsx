@@ -1,4 +1,4 @@
-import {Outlet, useBlocker, useLocation, useNavigate, useParams} from "react-router";
+import {Outlet, useBlocker, useLocation, useNavigate, useParams, useSearchParams} from "react-router";
 import classes from './Checkout.module.scss';
 import {useGetOrderPublic} from "../../../queries/useGetOrderPublic.ts";
 import {t} from "@lingui/macro";
@@ -29,6 +29,7 @@ const Checkout = () => {
     const event = order?.event;
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const orderIsCompleted = order?.status === 'COMPLETED';
     const orderIsReserved = order?.status === 'RESERVED';
     const orderIsAwaitingOfflinePayment = order?.status === 'AWAITING_OFFLINE_PAYMENT';
@@ -68,7 +69,21 @@ const Checkout = () => {
     };
 
     const handleReturn = () => {
-        navigate(`/event/${event?.id}/${event?.slug}`);
+        // Try to use returnUrl from query parameters first
+        const returnUrl = searchParams.get('returnUrl');
+        if (returnUrl) {
+            try {
+                window.location.href = decodeURIComponent(returnUrl);
+                return;
+            } catch (e) {
+                // Fall back to default if decoding fails
+            }
+        }
+        
+        // Fall back to event setting, then default event homepage
+        const redirectUrl = event?.settings?.abandoned_checkout_redirect_url 
+            || eventHomepagePath(event);
+        navigate(redirectUrl);
     };
 
     const handleInvoiceDownload = async (invoice: Invoice) => {

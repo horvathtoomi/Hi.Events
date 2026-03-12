@@ -1,5 +1,5 @@
 import {usePollGetOrderPublic} from "../../../../queries/usePollGetOrderPublic.ts";
-import {useNavigate, useParams} from "react-router";
+import {useNavigate, useParams, useSearchParams} from "react-router";
 import {useEffect, useRef, useState} from "react";
 import classes from './PaymentReturn.module.scss';
 import {t} from "@lingui/macro";
@@ -20,6 +20,7 @@ import {trackEvent, AnalyticsEvents} from "../../../../utilites/analytics.ts";
 export const PaymentReturn = () => {
     const [shouldPoll, setShouldPoll] = useState(true);
     const {eventId, orderShortId} = useParams();
+    const [searchParams] = useSearchParams();
     const {data: order} = usePollGetOrderPublic(eventId, orderShortId, shouldPoll, ['event']);
     const navigate = useNavigate();
     const [attemptManualConfirmation, setAttemptManualConfirmation] = useState(false);
@@ -51,7 +52,12 @@ export const PaymentReturn = () => {
                 const totalCents = Math.round((order.total_gross || 0) * 100);
                 trackEvent(AnalyticsEvents.PURCHASE_COMPLETED_PAID, { value: totalCents });
             }
-            navigate(eventCheckoutPath(eventId, orderShortId, 'summary'));
+            let url = eventCheckoutPath(eventId, orderShortId, 'summary');
+            const returnUrl = searchParams.get('returnUrl');
+            if (returnUrl) {
+                url += '?returnUrl=' + encodeURIComponent(returnUrl);
+            }
+            navigate(url);
         } else {
             // At this point we've tried multiple times to confirm the payment and failed.
             // This could be due to a network error on our end, or a problem with the payment provider (Stripe).
@@ -71,10 +77,20 @@ export const PaymentReturn = () => {
                 const totalCents = Math.round((order.total_gross || 0) * 100);
                 trackEvent(AnalyticsEvents.PURCHASE_COMPLETED_PAID, { value: totalCents });
             }
-            navigate(eventCheckoutPath(eventId, orderShortId, 'summary'));
+            let url = eventCheckoutPath(eventId, orderShortId, 'summary');
+            const returnUrl = searchParams.get('returnUrl');
+            if (returnUrl) {
+                url += '?returnUrl=' + encodeURIComponent(returnUrl);
+            }
+            navigate(url);
         }
         if (order?.payment_status === 'PAYMENT_FAILED' || (typeof window !== 'undefined' && window?.location.search.includes('failed'))) {
-            navigate(eventCheckoutPath(eventId, orderShortId, 'payment') + '?payment_failed=true');
+            let url = eventCheckoutPath(eventId, orderShortId, 'payment') + '?payment_failed=true';
+            const returnUrl = searchParams.get('returnUrl');
+            if (returnUrl) {
+                url += '&returnUrl=' + encodeURIComponent(returnUrl);
+            }
+            navigate(url);
         }
     }, [order]);
 

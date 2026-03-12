@@ -216,7 +216,12 @@ export const CollectInformation = () => {
             if (nextPage === 'summary') {
                 trackEvent(AnalyticsEvents.PURCHASE_COMPLETED_FREE);
             }
-            navigate(eventCheckoutPath(eventId, data.data.short_id, nextPage));
+            const returnUrl = searchParams.get('returnUrl');
+            let url = eventCheckoutPath(eventId, data.data.short_id, nextPage);
+            if (returnUrl) {
+                url += '?returnUrl=' + encodeURIComponent(returnUrl);
+            }
+            navigate(url);
         },
 
         onError: (error: any) => {

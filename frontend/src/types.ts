@@ -255,6 +255,9 @@ export interface EventSettings {
     // Waitlist settings
     waitlist_auto_process?: boolean;
     waitlist_offer_timeout_minutes?: number | null;
+
+    // Checkout settings
+    abandoned_checkout_redirect_url?: string;
 }
 
 export interface VenueAddress {

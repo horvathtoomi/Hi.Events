@@ -1,5 +1,5 @@
 import {t} from "@lingui/macro";
-import {NavLink, useNavigate, useParams, useLocation} from "react-router";
+import {NavLink, useNavigate, useParams, useLocation, useSearchParams} from "react-router";
 import {ActionIcon, Alert, Button, Group, SimpleGrid, Text, Tooltip} from "@mantine/core";
 import {
     IconBuilding,
@@ -399,6 +399,7 @@ const OfflinePaymentInstructions = ({ event }: { event: Event }) => (
 export const OrderSummaryAndProducts = () => {
     const {eventId, orderShortId} = useParams();
     const location = useLocation();
+    const [searchParams] = useSearchParams();
     const {data: order, isFetched: orderIsFetched, isError} = useGetOrderPublic(eventId, orderShortId, ['event']);
     const event = order?.event;
     const navigate = useNavigate();
@@ -456,7 +457,12 @@ export const OrderSummaryAndProducts = () => {
                     showSuccess(result.message || t`Order updated successfully`);
 
                     if (result.new_short_id) {
-                        navigate(`/checkout/${eventId}/${result.new_short_id}/summary`, {
+                        let url = `/checkout/${eventId}/${result.new_short_id}/summary`;
+                        const returnUrl = searchParams.get('returnUrl');
+                        if (returnUrl) {
+                            url += '?returnUrl=' + encodeURIComponent(returnUrl);
+                        }
+                        navigate(url, {
                             state: { emailUpdated: true }
                         });
                     } else {
@@ -542,7 +548,12 @@ export const OrderSummaryAndProducts = () => {
     }
 
     if (window?.location.search.includes('failed') || order?.payment_status === 'PAYMENT_FAILED') {
-        navigate(eventCheckoutPath(eventId, orderShortId, 'payment') + '?payment_failed=true');
+        let url = eventCheckoutPath(eventId, orderShortId, 'payment') + '?payment_failed=true';
+        const returnUrl = searchParams.get('returnUrl');
+        if (returnUrl) {
+            url += '&returnUrl=' + encodeURIComponent(returnUrl);
+        }
+        navigate(url);
         return;
     }
 

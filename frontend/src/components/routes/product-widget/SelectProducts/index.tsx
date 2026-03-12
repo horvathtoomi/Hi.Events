@@ -139,10 +139,13 @@ const SelectProducts = (props: SelectProductsProps) => {
 
         onSuccess: (data) => queryClient.invalidateQueries()
             .then(() => {
-                const url = '/checkout/' + eventId + '/' + data.data.short_id + '/details';
+                // Build checkout URL with return URL query parameter
+                const returnUrl = encodeURIComponent(window.location.href);
+                let url = '/checkout/' + eventId + '/' + data.data.short_id + '/details?returnUrl=' + returnUrl;
+                
                 if (props.widgetMode === 'embedded') {
                     window.open(
-                        url + '?session_identifier=' + data.data.session_identifier + '&utm_source=embedded_widget',
+                        url + '&session_identifier=' + data.data.session_identifier + '&utm_source=embedded_widget',
                         '_blank'
                     );
                     setOrderInProcessOverlayVisible(true);
